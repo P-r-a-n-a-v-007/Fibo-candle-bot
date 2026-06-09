@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Fibo Candle Bot",
+  "version": "0.8",
+  "description": "Fibonacci analysis for any Groww chart — stocks, ETFs, mutual funds, indices.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://groww.in/*",
+    "*://*.groww.in/*"
+  ],
+  "action": {
+    "default_title": "Fibo Candle Bot",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://groww.in/*", "*://*.groww.in/*"],
+      "js": ["sniffer.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["*://groww.in/*", "*://*.groww.in/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "world": "ISOLATED"
+    }
+  ]
+}

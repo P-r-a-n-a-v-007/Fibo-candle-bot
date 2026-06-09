@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fibo Candle Bot</title>
+  <style>
+    :root {
+      --green:      #00c853;
+      --green-dk:   #00953e;
+      --red:        #e53935;
+      --amber:      #f59e0b;
+      --blue:       #1976d2;
+      --bg:         #f4f6f8;
+      --card:       #ffffff;
+      --border:     #e0e0e0;
+      --text:       #1a1f27;
+      --muted:      #6b7280;
+      --radius:     10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 13px;
+      width: 360px;
+      background: var(--bg);
+      color: var(--text);
+      padding: 10px;
+    }
+
+    /* Header */
+    .header {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+    }
+    .logo {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: var(--green); color: #fff;
+      font-weight: 900; font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .header-text h1 { font-size: 13px; font-weight: 700; }
+    .header-text p  { font-size: 11px; color: var(--muted); }
+    .header-meta    { margin-left: auto; text-align: right; font-size: 10px; color: var(--muted); line-height: 1.4; }
+
+    /* Button */
+    button {
+      width: 100%; padding: 9px;
+      font-size: 13px; font-weight: 600;
+      border: none; border-radius: 999px;
+      background: var(--green); color: #fff;
+      cursor: pointer; margin-bottom: 8px;
+      transition: background .15s;
+    }
+    button:hover:not(:disabled) { background: var(--green-dk); }
+    button:disabled { background: #bbb; cursor: not-allowed; }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin-bottom: 6px;
+    }
+    .card-row { display: flex; gap: 8px; align-items: flex-start; }
+    .card-icon { font-size: 18px; flex-shrink: 0; line-height: 1; margin-top: 1px; }
+    .card-body { flex: 1; }
+    .card-title {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--muted); margin-bottom: 3px;
+    }
+    .card-text { font-size: 12.5px; line-height: 1.55; color: var(--text); }
+
+    /* Headline card variants */
+    .card.bull  { border-color: #a7e5c0; background: #edfaf3; }
+    .card.bear  { border-color: #f5c6c4; background: #fef2f2; }
+    .card.neut  { border-color: #e5e7eb; background: #f9fafb; }
+    .card.bull .card-text { color: var(--green-dk); font-weight: 600; font-size: 14px; }
+    .card.bear .card-text { color: var(--red);      font-weight: 600; font-size: 14px; }
+    .card.neut .card-text { color: #374151;         font-weight: 600; font-size: 14px; }
+
+    /* Strength pill */
+    .pill {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 999px; margin-top: 4px;
+    }
+    .pill.weak     { background: #f3f4f6; color: #6b7280; }
+    .pill.moderate { background: #fef3c7; color: #92640b; }
+    .pill.good     { background: #dbeafe; color: #1e40af; }
+    .pill.strong   { background: #d1fae5; color: #065f46; }
+
+    /* Error / loading */
+    .msg-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px;
+      font-size: 12px; line-height: 1.6; color: var(--text);
+    }
+    .msg-card.error { border-color: #fca5a5; background: #fef2f2; color: #7f1d1d; }
+
+    /* Footer */
+    .footer { text-align: right; font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+    #cards { display: none; }
+    #msgBox { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">F</div>
+    <div class="header-text">
+      <h1>Fibo Candle Bot</h1>
+      <p>Fibonacci analysis for Groww</p>
+    </div>
+    <div class="header-meta" id="headerMeta"></div>
+  </div>
+
+  <button id="analyzeBtn">🔍 Analyze current chart</button>
+
+  <!-- Error / status message -->
+  <div id="msgBox" class="msg-card"></div>
+
+  <!-- Result cards -->
+  <div id="cards">
+    <div class="card" id="headlineCard">
+      <div class="card-row">
+        <div class="card-icon" id="hIcon"></div>
+        <div class="card-body">
+          <div class="card-title">Current trend</div>
+          <div class="card-text" id="hText"></div>
+          <span class="pill" id="strengthPill"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="holdCard">
+      <div class="card-row">
+        <div class="card-icon" id="holdIcon"></div>
+        <div class="card-body">
+          <div class="card-title" id="holdTitle"></div>
+          <div class="card-text" id="holdText"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="priceCard">
+      <div class="card-row">
+        <div class="card-icon" id="priceIcon"></div>
+        <div class="card-body">
+          <div class="card-title" id="priceTitle"></div>
+          <div class="card-text" id="priceText"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="cautionCard">
+      <div class="card-row">
+        <div class="card-icon" id="cautionIcon"></div>
+        <div class="card-body">
+          <div class="card-title" id="cautionTitle"></div>
+          <div class="card-text" id="cautionText"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">v0.5 · Fibonacci + chart patterns · Not financial advice</div>
+
+  <script src="analysis.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
